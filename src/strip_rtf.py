@@ -1,4 +1,17 @@
 #!/usr/bin/env python
+"""Converts RTF into plain text.
+
+Usage: strip_rtf.py path-to-rtf-file
+
+Creates a utf-8 encoded text file 
+with the same file name, but .txt extension.
+
+Copyright (c) 2025 Peter Triesberger
+For further information see https://github.com/peter88213/cnv_genlog
+Published under the MIT License 
+(https://opensource.org/licenses/mit-license.php)
+"""
+
 import os
 import sys
 
