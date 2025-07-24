@@ -42,12 +42,12 @@ class Person:
         self.spouses = []
         self.image = None
 
-    def get_record(self, personId=None):
+    def get_record(self, person_id=None):
 
         #--- YAML part.
         lines = ['---']
-        if personId:
-            lines.append(f'ID: {personId}')
+        if person_id:
+            lines.append(f'ID: {person_id}')
         lines.append(f'Name: {self.name}')
         if self.profession:
             lines.append(f'Beruf: {self.profession}')
@@ -85,8 +85,8 @@ class Person:
 
 def serialize_people(people):
     lines = []
-    for i, personId in enumerate(people):
-        lines.extend(people[personId].get_record(personId))
+    for i, person_id in enumerate(people):
+        lines.extend(people[person_id].get_record(person_id))
         lines.append('')
     lines.append(f'{i} Datensätze gefunden')
     return lines
@@ -98,10 +98,25 @@ def print_people(people):
         print(line)
 
 
-def write_people(file_path, people):
+def write_single_text_file(file_path, people):
     lines = serialize_people(people)
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write('\n'.join(lines))
+
+
+def sanitize_title(title):
+    # Return title with disallowed characters removed.
+    return re.sub(r'[\\|\/|\:|\*|\?|\"|\<|\>|\|]+', '', title)
+
+
+def write_obsidian_notes(folder_path, people):
+    os.makedirs(folder_path, exist_ok=True)
+
+    for person_id in people:
+        title = sanitize_title(person_id)
+        lines = people[person_id].get_record(person_id)
+        with open(f'{folder_path}/{title}.md', 'w', encoding='utf-8') as f:
+            f.write('\n'.join(lines))
 
 
 def add_person(people, person, key):
@@ -196,21 +211,25 @@ def parse_lines(lines, personClass=Person):
 
 
 # Output variants.
-PRINT = 0
+SCREEN = 0
 TEXT_FILE = 1
+OBSIDIAN_NOTES = 2
 
 
-def main(file_path, output=PRINT):
+def main(file_path, output=SCREEN):
     root, extension = os.path.splitext(file_path)
     with open(file_path, 'r', encoding='utf-8') as w:
         lines = w.read().split('\n')
     people = parse_lines(lines)
-    if output == PRINT:
+    if output == SCREEN:
         print_people(people)
     elif output == TEXT_FILE:
         result_file = f'{root}_parsed.txt'
-        write_people(result_file, people)
+        write_single_text_file(result_file, people)
+    elif output == OBSIDIAN_NOTES:
+        folder_path = f'{root}_vault'
+        write_obsidian_notes(folder_path, people)
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], TEXT_FILE)
+    main(sys.argv[1], OBSIDIAN_NOTES)
