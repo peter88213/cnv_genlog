@@ -4,10 +4,12 @@ Convert *Genlog* family tree data.
 
 ------------
 
-### Purpose
+## Purpose
 
 *Genlog* is a legacy family tree software to be replaced. 
 For this, data has to be converted from its native format into some free format.
+
+## The Genlog data format
 
 -   *Genlog* stores data in a single hypertext document whose pages correspond to the individual data records. 
 -   This hypertext document is in binary format, namely the *WinHelp* format, which has since been discontinued by Microsoft. 
@@ -19,16 +21,16 @@ For this, data has to be converted from its native format into some free format.
     This means that the data fields on the pages are not type-bound. 
     They are free text and can therefore be understood primarily visually. 
 
-------------
 
-### Steps
+## Steps
 
 1. Disassemble the *.hlp* files, getting *.rtf* and *.bmp* files. The right tool for this is *HELPDECO.EXE* by Manfred Winterhoff 
    (see [tools](tools)).
 2. Convert the *.bmp* image files to *.jpg*. This can be easily done e.g. using the batch conversion feature of *IrfanView*. 
 3. Convert the *.rtf* files into plain text via the *strip_rtf.py* script.
 4. Parse the plain text files in order to get the best-structured data possible.
-5. Create a new data base to revise the metadata. This can be an *Obsidian* vault, for instance.
+5. Create a new data base to revise the metadata. This can be an *Obsidian* vault, for instance. 
+   Also the linked external documents should then be *Obsidian* notes.
 6. Create target data, e.g. GEDCOM. 
 
 ------------
