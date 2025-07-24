@@ -42,37 +42,51 @@ class Person:
         self.spouses = []
         self.image = None
 
+    def get_record(self, personId=None):
+
+        #--- YAML part.
+        lines = ['---']
+        if personId:
+            lines.append(f'ID: {personId}')
+        lines.append(f'Name: {self.name}')
+        if self.profession:
+            lines.append(f'Beruf: {self.profession}')
+        if self.image:
+            lines.append(f'Bild: {self.image}')
+        if self.birth:
+            lines.append(f'Geboren: {self.birth}')
+        if self.death:
+            lines.append(f'Gestorben: {self.death}')
+        if self.father:
+            lines.append(f'Vater: {self.father}')
+        if self.mother:
+            lines.append(f'Mutter: {self.mother}')
+        if self.spouses:
+            lines.append('Verheiratet:')
+            for spouse in self.spouses:
+                lines.append(f'  - {spouse}')
+        if self.children:
+            lines.append('Kinder:')
+            for child in self.children:
+                lines.append(f'  - {child}')
+        if self.documents:
+            lines.append('Dokumente:')
+            for document in self.documents:
+                lines.append(f'  - {document}')
+        lines.append('---')
+
+        #--- Plain text part.
+        for desc in self.desc:
+            if desc:
+                lines.append(desc)
+
+        return lines
+
 
 def serialize_people(people):
     lines = []
     for i, personId in enumerate(people):
-        person = people[personId]
-        lines.append('-' * 60)
-        lines.append(f'ID  :        {personId}')
-        lines.append('-' * 60)
-        lines.append(f'Name:        {person.name}')
-        if person.profession:
-            lines.append(f'Beruf:       {person.profession}')
-        if person.image:
-            lines.append(f'Bild:        {person.image}')
-        if person.birth:
-            lines.append(f'Geboren:     {person.birth}')
-        if person.death:
-            lines.append(f'Gestorben:   {person.death}')
-        if person.father:
-            lines.append(f'Vater:       {person.father}')
-        if person.mother:
-            lines.append(f'Mutter:      {person.mother}')
-        for spouse in person.spouses:
-            lines.append(f'Verheiratet: {spouse}')
-        for child in person.children:
-            lines.append(f'Kind:        {child}')
-        for document in person.documents:
-            lines.append(f'Dokument:    {document}')
-        lines.append('')
-        for desc in person.desc:
-            if desc:
-                lines.append(desc)
+        lines.extend(people[personId].get_record(personId))
         lines.append('')
     lines.append(f'{i} Datensätze gefunden')
     return lines
@@ -118,7 +132,7 @@ def leave_state(state, person, text):
             person.children = text.split('\n')
 
 
-def parse_lines(lines):
+def parse_lines(lines, personClass=Person):
     state = None
     people = {}
     text = []
@@ -128,7 +142,7 @@ def parse_lines(lines):
     for line in lines:
         if line.startswith(RECORD_MARKER):
             add_person(people, person, key)
-            person = Person()
+            person = personClass()
             key = line[len(RECORD_MARKER):].strip()
             leave_state(state, person, '')
             state = EXPECT_NAME
@@ -181,17 +195,22 @@ def parse_lines(lines):
     return people
 
 
-def main(file_path):
+# Output variants.
+PRINT = 0
+TEXT_FILE = 1
+
+
+def main(file_path, output=PRINT):
+    root, extension = os.path.splitext(file_path)
     with open(file_path, 'r', encoding='utf-8') as w:
         lines = w.read().split('\n')
     people = parse_lines(lines)
-    # print_people(people)
-    # return
-
-    root, extension = os.path.splitext(file_path)
-    result_file = f'{root}_parsed.txt'
-    write_people(result_file, people)
+    if output == PRINT:
+        print_people(people)
+    elif output == TEXT_FILE:
+        result_file = f'{root}_parsed.txt'
+        write_people(result_file, people)
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(sys.argv[1], TEXT_FILE)
