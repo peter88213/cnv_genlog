@@ -76,7 +76,7 @@ class Person:
 
         #--- Plain text part.
         if self.image:
-            lines.append(f'![[{IMAGE_SUBDIR}/{self.image}]]')
+            lines.append(f'![Bild]({IMAGE_SUBDIR}/{self.image})')
             lines.append('')
         for desc in self.desc:
             if desc:
