@@ -13,9 +13,9 @@ For this, data has to be converted from its native format into some free format.
 
 -   *Genlog* stores data in a single hypertext document whose pages correspond to the individual data records. 
 -   This hypertext document is in binary format, namely the *WinHelp* format, which has since been discontinued by Microsoft. 
--   Internally, the RTF format is used, which has also been discontinued by Microsoft. 
+-   Internally, the RTF format is used, which is also being discontinued by Microsoft. 
 -   Each data record is identified by an ID to which other pages can link (e.g., as children, parents, spouses).
--   The *Genlog* software can generate a tree structure from these keys and display it as a family tree 
+-   The *Genlog* software can generate a tree structure from the links and display it as a family tree 
     with variable depth and selectable root nodes. The leaves are implemented as links to the pages in the hypertext document. 
 -   Apart from the ID links, *Genlog* does not need to understand the semantics of the content. 
     This means that the data fields on the pages are not type-bound. 
