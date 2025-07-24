@@ -48,27 +48,33 @@ def serialize_people(people):
     for i, personId in enumerate(people):
         person = people[personId]
         lines.append('-' * 60)
-        lines.append(f'ID  :       {personId}')
+        lines.append(f'ID  :        {personId}')
         lines.append('-' * 60)
-        lines.append(f'Name:       {person.name}')
-        lines.append(f'Profession: {person.profession}')
-        lines.append(f'Image:      {person.image}')
-        lines.append(f'Born:       {person.birth}')
-        lines.append(f'Died:       {person.death}')
-        lines.append(f'Father:     {person.father}')
-        lines.append(f'Mother:     {person.mother}')
+        lines.append(f'Name:        {person.name}')
+        if person.profession:
+            lines.append(f'Beruf:       {person.profession}')
+        if person.image:
+            lines.append(f'Bild:        {person.image}')
+        if person.birth:
+            lines.append(f'Geboren:     {person.birth}')
+        if person.death:
+            lines.append(f'Gestorben:   {person.death}')
+        if person.father:
+            lines.append(f'Vater:       {person.father}')
+        if person.mother:
+            lines.append(f'Mutter:      {person.mother}')
         for spouse in person.spouses:
-            lines.append(f'Spouse:     {spouse}')
+            lines.append(f'Verheiratet: {spouse}')
         for child in person.children:
-            lines.append(f'Child:      {child}')
+            lines.append(f'Kind:        {child}')
         for document in person.documents:
-            lines.append(f'Document:   {document}')
+            lines.append(f'Dokument:    {document}')
         lines.append('')
         for desc in person.desc:
             if desc:
-                lines.append(f'            {desc}')
+                lines.append(desc)
         lines.append('')
-    lines.append(f'{i} records found.')
+    lines.append(f'{i} Datensätze gefunden')
     return lines
 
 
@@ -130,18 +136,18 @@ def parse_lines(lines):
             image = image_pattern.search(line).group(1)
             if image:
                 person.image = image
-        elif line.startswith('oo '):
+        elif line.startswith('oo'):
             state = change_state(state, EXPECT_DESC, person, '\n'.join(text))
             text.clear()
             person.spouses.append(line[2:].strip())
-        elif line.startswith('* '):
+        elif line.startswith('*'):
             state = change_state(state, EXPECT_DESC, person, '\n'.join(text))
             text.clear()
-            person.birth = line[2:].strip()
-        elif line.startswith('+ '):
+            person.birth = line[1:].strip()
+        elif line.startswith('+'):
             state = change_state(state, EXPECT_DESC, person, '\n'.join(text))
             text.clear()
-            person.death = line[2:].strip()
+            person.death = line[1:].strip()
         elif line.startswith('Vater:'):
             state = change_state(state, EXPECT_FATHER, person, '\n'.join(text))
             text.clear()
@@ -170,9 +176,7 @@ def main(file_path):
     with open(file_path, 'r', encoding='utf-8') as w:
         lines = w.read().split('\n')
     people = parse_lines(lines)
-    print_people(people)
-    return
-
+    # print_people(people)
     root, extension = os.path.splitext(file_path)
     result_file = f'{root}_parsed.txt'
     write_people(result_file, people)
