@@ -95,7 +95,7 @@ def add_person(people, person, key):
         people[key] = person
 
 
-def change_state(state, new_state, person, text):
+def leave_state(state, person, text):
     if state == EXPECT_NAME:
         if text:
             person.name = text.strip()
@@ -116,7 +116,6 @@ def change_state(state, new_state, person, text):
     elif state == EXPECT_CHILDREN:
         if text:
             person.children = text.split('\n')
-    return new_state
 
 
 def parse_lines(lines):
@@ -131,40 +130,50 @@ def parse_lines(lines):
             add_person(people, person, key)
             person = Person()
             key = line[len(RECORD_MARKER):].strip()
-            state = change_state(state, EXPECT_NAME, person, '')
+            leave_state(state, person, '')
+            state = EXPECT_NAME
         elif line.startswith(IMAGE_MARKER):
             image = image_pattern.search(line).group(1)
             if image:
                 person.image = image
         elif line.startswith('oo'):
-            state = change_state(state, EXPECT_DESC, person, '\n'.join(text))
+            leave_state(state, person, '\n'.join(text))
+            state = EXPECT_DESC
             text.clear()
             person.spouses.append(line[2:].strip())
         elif line.startswith('*'):
-            state = change_state(state, EXPECT_DESC, person, '\n'.join(text))
+            leave_state(state, person, '\n'.join(text))
+            state = EXPECT_DESC
             text.clear()
             person.birth = line[1:].strip()
         elif line.startswith('+'):
-            state = change_state(state, EXPECT_DESC, person, '\n'.join(text))
+            leave_state(state, person, '\n'.join(text))
+            state = EXPECT_DESC
             text.clear()
             person.death = line[1:].strip()
         elif line.startswith('Vater:'):
-            state = change_state(state, EXPECT_FATHER, person, '\n'.join(text))
+            leave_state(state, person, '\n'.join(text))
+            state = EXPECT_FATHER
             text.clear()
         elif line.startswith('Mutter:'):
-            state = change_state(state, EXPECT_MOTHER, person, '\n'.join(text))
+            leave_state(state, person, '\n'.join(text))
+            state = EXPECT_MOTHER
             text.clear()
         elif line.startswith('Kinder:'):
-            state = change_state(state, EXPECT_CHILDREN, person, '\n'.join(text))
+            leave_state(state, person, '\n'.join(text))
+            state = EXPECT_CHILDREN
             text.clear()
         elif line and state == EXPECT_NAME:
-            state = change_state(state, EXPECT_PROFESSION, person, line)
+            leave_state(state, person, line)
+            state = EXPECT_PROFESSION
             text.clear()
         elif line and state == EXPECT_PROFESSION:
-            state = change_state(state, EXPECT_DESC, person, line)
+            leave_state(state, person, line)
+            state = EXPECT_DESC
             text.clear()
         elif not line and state != EXPECT_NAME:
-            state = change_state(state, EXPECT_DESC, person, '\n'.join(text))
+            leave_state(state, person, '\n'.join(text))
+            state = EXPECT_DESC
             text.clear()
         else:
             text.append(line)
@@ -177,6 +186,8 @@ def main(file_path):
         lines = w.read().split('\n')
     people = parse_lines(lines)
     # print_people(people)
+    # return
+
     root, extension = os.path.splitext(file_path)
     result_file = f'{root}_parsed.txt'
     write_people(result_file, people)
