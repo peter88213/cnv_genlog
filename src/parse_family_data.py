@@ -17,6 +17,7 @@ IMAGE_MARKER = '{bmc '
 NO_DATE = 'o.D.'
 LINK_MARKER = '>main'
 image_pattern = re.compile(r'{bmc (.*?)\.BMP}')
+IMAGE_SUBDIR = 'images'
 
 # Parser states.
 EXPECT_NAME = 0
@@ -51,8 +52,6 @@ class Person:
         lines.append(f'Name: {self.name}')
         if self.profession:
             lines.append(f'Beruf: {self.profession}')
-        if self.image:
-            lines.append(f'Bild: {self.image}')
         if self.birth:
             lines.append(f'Geboren: {self.birth}')
         if self.death:
@@ -76,6 +75,9 @@ class Person:
         lines.append('---')
 
         #--- Plain text part.
+        if self.image:
+            lines.append(f'![[{IMAGE_SUBDIR}/{self.image}]]')
+            lines.append('')
         for desc in self.desc:
             if desc:
                 lines.append(desc)
@@ -114,7 +116,7 @@ def write_obsidian_notes(folder_path, people):
 
     for person_id in people:
         title = sanitize_title(person_id)
-        lines = people[person_id].get_record(person_id)
+        lines = people[person_id].get_record()
         with open(f'{folder_path}/{title}.md', 'w', encoding='utf-8') as f:
             f.write('\n'.join(lines))
 
@@ -164,7 +166,7 @@ def parse_lines(lines, personClass=Person):
         elif line.startswith(IMAGE_MARKER):
             image = image_pattern.search(line).group(1)
             if image:
-                person.image = image
+                person.image = f'{image}.jpg'
         elif line.startswith('oo'):
             leave_state(state, person, '\n'.join(text))
             state = EXPECT_DESC
