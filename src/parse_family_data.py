@@ -3,14 +3,12 @@
 
 Usage: parse-family_data.py path-to-txt-file
 
-The kind of output file is still to be defined.
-For the time being, the records are written to stdout.
-
 Copyright (c) 2025 Peter Triesberger
 For further information see https://github.com/peter88213/cnv_genlog
 Published under the MIT License 
 (https://opensource.org/licenses/mit-license.php)
 """
+import os
 import sys
 import re
 
@@ -26,12 +24,14 @@ EXPECT_DESC = 1
 EXPECT_FATHER = 2
 EXPECT_MOTHER = 3
 EXPECT_CHILDREN = 4
+EXPECT_PROFESSION = 5
 
 
 class Person:
 
     def __init__(self):
         self.name = None
+        self.profession = None
         self.desc = []
         self.children = []
         self.father = None
@@ -43,30 +43,45 @@ class Person:
         self.image = None
 
 
-def print_people(people):
+def serialize_people(people):
+    lines = []
     for i, personId in enumerate(people):
         person = people[personId]
-        print('-' * 60)
-        print(f'ID  :     {personId}')
-        print('-' * 60)
-        print(f'Name:     {person.name}')
-        print(f'Image:    {person.image}')
-        print(f'Born:     {person.birth}')
-        print(f'Died:     {person.death}')
-        print(f'Father:   {person.father}')
-        print(f'Mother:   {person.mother}')
+        lines.append('-' * 60)
+        lines.append(f'ID  :       {personId}')
+        lines.append('-' * 60)
+        lines.append(f'Name:       {person.name}')
+        lines.append(f'Profession: {person.profession}')
+        lines.append(f'Image:      {person.image}')
+        lines.append(f'Born:       {person.birth}')
+        lines.append(f'Died:       {person.death}')
+        lines.append(f'Father:     {person.father}')
+        lines.append(f'Mother:     {person.mother}')
         for spouse in person.spouses:
-            print(f'Spouse:   {spouse}')
+            lines.append(f'Spouse:     {spouse}')
         for child in person.children:
-            print(f'Child:    {child}')
+            lines.append(f'Child:      {child}')
         for document in person.documents:
-            print(f'Document: {document}')
-        print()
+            lines.append(f'Document:   {document}')
+        lines.append('')
         for desc in person.desc:
             if desc:
-                print(f'          {desc}')
-        print()
-    print(f'{i} records found.')
+                lines.append(f'            {desc}')
+        lines.append('')
+    lines.append(f'{i} records found.')
+    return lines
+
+
+def print_people(people):
+    lines = serialize_people(people)
+    for line in lines:
+        print(line)
+
+
+def write_people(file_path, people):
+    lines = serialize_people(people)
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(lines))
 
 
 def add_person(people, person, key):
@@ -78,6 +93,9 @@ def change_state(state, new_state, person, text):
     if state == EXPECT_NAME:
         if text:
             person.name = text.strip()
+    elif state == EXPECT_PROFESSION:
+        if text:
+            person.profession = text.strip()
     elif state == EXPECT_DESC:
         if text:
             text = text.strip()
@@ -134,10 +152,13 @@ def parse_lines(lines):
             state = change_state(state, EXPECT_CHILDREN, person, '\n'.join(text))
             text.clear()
         elif line and state == EXPECT_NAME:
-            state = state = change_state(state, EXPECT_DESC, person, line)
+            state = change_state(state, EXPECT_PROFESSION, person, line)
+            text.clear()
+        elif line and state == EXPECT_PROFESSION:
+            state = change_state(state, EXPECT_DESC, person, line)
             text.clear()
         elif not line and state != EXPECT_NAME:
-            state = state = change_state(state, EXPECT_DESC, person, '\n'.join(text))
+            state = change_state(state, EXPECT_DESC, person, '\n'.join(text))
             text.clear()
         else:
             text.append(line)
@@ -150,6 +171,11 @@ def main(file_path):
         lines = w.read().split('\n')
     people = parse_lines(lines)
     print_people(people)
+    return
+
+    root, extension = os.path.splitext(file_path)
+    result_file = f'{root}_parsed.txt'
+    write_people(result_file, people)
 
 
 if __name__ == "__main__":
