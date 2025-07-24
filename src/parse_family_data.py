@@ -172,12 +172,12 @@ def parse_lines(lines, personClass=Person):
             state = EXPECT_DESC
             text.clear()
             person.spouses.append(line[2:].strip())
-        elif line.startswith('*'):
+        elif line.startswith('*') and not person.birth:
             leave_state(state, person, '\n'.join(text))
             state = EXPECT_DESC
             text.clear()
             person.birth = line[1:].strip()
-        elif line.startswith('+'):
+        elif line.startswith('+') and not person.death:
             leave_state(state, person, '\n'.join(text))
             state = EXPECT_DESC
             text.clear()
