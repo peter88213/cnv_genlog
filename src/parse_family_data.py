@@ -26,6 +26,7 @@ EXPECT_FATHER = 2
 EXPECT_MOTHER = 3
 EXPECT_CHILDREN = 4
 EXPECT_PROFESSION = 5
+EXPECT_DOCUMENTS = 6
 
 
 class Person:
@@ -57,32 +58,44 @@ class Person:
         if self.death:
             lines.append(f'Gestorben: {self.death}')
         if self.father:
-            lines.append(f'Vater: {self.father}')
+            lines.append(f'Vater: {self._sanitize_link(self.father)}')
         if self.mother:
-            lines.append(f'Mutter: {self.mother}')
+            lines.append(f'Mutter: {self._sanitize_link(self.mother)}')
         if self.spouses:
-            lines.append('Verheiratet:')
+            lines.append('Ehepartner:')
             for spouse in self.spouses:
-                lines.append(f'  - {spouse}')
+                lines.append(f'  - {self._sanitize_link(spouse)}')
         if self.children:
             lines.append('Kinder:')
             for child in self.children:
-                lines.append(f'  - {child}')
+                lines.append(f'  - {self._sanitize_link(child)}')
         if self.documents:
             lines.append('Dokumente:')
             for document in self.documents:
-                lines.append(f'  - {document}')
+                lines.append(f'  - {self._sanitize_link(document)}')
         lines.append('---')
 
-        #--- Plain text part.
+        #--- Markdown text part.
+
         if self.image:
-            lines.append(f'![Bild]({IMAGE_SUBDIR}/{self.image})')
+            lines.append(f'![[{IMAGE_SUBDIR}/{self.image}|Bild]]')
             lines.append('')
         for desc in self.desc:
             if desc:
                 lines.append(desc)
 
+        if self.spouses:
+            lines.append('### Verheiratet:')
+            for spouse in self.spouses:
+                lines.append(f'  - {spouse}')
+
         return lines
+
+    def _sanitize_link(self, text):
+        return re.sub(r'.*?\[\[(.*?)\]\].*', r'"[[\1]]"', text)
+
+    def _unlink(self, text):
+        return text.replace('[[', '').replace(']]', '')
 
 
 def serialize_people(people):
@@ -147,6 +160,9 @@ def leave_state(state, person, text):
     elif state == EXPECT_CHILDREN:
         if text:
             person.children = text.split('\n')
+    elif state == EXPECT_DOCUMENTS:
+        if text:
+            person.documents = text.split('\n')
 
 
 def parse_lines(lines, personClass=Person):
@@ -193,6 +209,10 @@ def parse_lines(lines, personClass=Person):
         elif line.startswith('Kinder:'):
             leave_state(state, person, '\n'.join(text))
             state = EXPECT_CHILDREN
+            text.clear()
+        elif line.startswith('Dokumente:'):
+            leave_state(state, person, '\n'.join(text))
+            state = EXPECT_DOCUMENTS
             text.clear()
         elif line and state == EXPECT_NAME:
             leave_state(state, person, line)

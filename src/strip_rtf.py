@@ -13,15 +13,30 @@ Published under the MIT License
 """
 
 import os
+import re
 import sys
 
 from striprtf.striprtf import rtf_to_text
 
 
+def sanitize_links(rtf_text):
+    rtf_text = re.sub(
+        r'\\uldb (.*?)\\plain\\fs20 \{\\v .*?>main\}',
+        r'\\uldb [[\1\\plain\\fs20 ]]',
+        rtf_text
+    )
+    rtf_text = re.sub(
+        r'\\uldb .*?\\plain\\fs20 \{\\v .*?>main\@(.*?)\.HLP\}',
+        r'\\uldb [[documents/\1.md]]',
+        rtf_text
+    )
+    return rtf_text
+
+
 def main(rtf_file):
     with open(rtf_file, 'r', encoding='utf-8') as w:
         in_rtf = w.read()
-    content = rtf_to_text(in_rtf)
+    content = rtf_to_text(sanitize_links(in_rtf))
     root, extension = os.path.splitext(rtf_file)
     with open(f'{root}.txt', 'w', encoding='utf-8') as w:
         w.write(content)
@@ -29,3 +44,4 @@ def main(rtf_file):
 
 if __name__ == "__main__":
     main(sys.argv[1])
+
