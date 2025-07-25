@@ -29,7 +29,7 @@ For this, data has to be converted from its native format into some free format.
 2. Convert the *.bmp* image files to *.jpg*. This can be easily done e.g. using the batch conversion feature of *IrfanView*. 
 3. Convert the *.rtf* files into plain text via the *strip_rtf.py* script.
 4. Parse the plain text files in order to get the best-structured data possible.
-5. Create a new data base to revise the metadata. This is currently an *Obsidian* vault, for instance. 
+5. Create a new data base to revise the metadata. This is currently an *Obsidian* vault. 
    Also the linked external documents should then be *Obsidian* notes.
 6. Create target data, e.g. GEDCOM. 
 
