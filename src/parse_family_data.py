@@ -14,8 +14,7 @@ import re
 
 RECORD_MARKER = '$#K'
 IMAGE_MARKER = '{bmc '
-NO_DATE = 'o.D.'
-LINK_MARKER = '>main'
+link_pattern = re.compile(r'\[\[(.*?)\]\]')
 image_pattern = re.compile(r'{bmc (.*?)\.BMP}')
 IMAGE_SUBDIR = 'images'
 
@@ -58,21 +57,21 @@ class Person:
         if self.death:
             lines.append(f'Gestorben: {self.death}')
         if self.father:
-            lines.append(f'Vater: {self._sanitize_link(self.father)}')
+            lines.append(f'Vater: "{extract_link(self.father)}"')
         if self.mother:
-            lines.append(f'Mutter: {self._sanitize_link(self.mother)}')
+            lines.append(f'Mutter: "{extract_link(self.mother)}"')
         if self.spouses:
             lines.append('Ehepartner:')
             for spouse in self.spouses:
-                lines.append(f'  - {self._sanitize_link(spouse)}')
+                lines.append(f'  - "{extract_link(spouse)}"')
         if self.children:
             lines.append('Kinder:')
             for child in self.children:
-                lines.append(f'  - {self._sanitize_link(child)}')
+                lines.append(f'  - "{extract_link(child)}"')
         if self.documents:
             lines.append('Dokumente:')
             for document in self.documents:
-                lines.append(f'  - {self._sanitize_link(document)}')
+                lines.append(f'  - "{extract_link(document)}"')
         lines.append('---')
 
         #--- Markdown text part.
@@ -87,15 +86,20 @@ class Person:
         if self.spouses:
             lines.append('### Verheiratet:')
             for spouse in self.spouses:
+                if '[[' in spouse:
+                    link = link_pattern.search(spouse).group(1)
+                    spouse = spouse.replace(link, sanitize_title(link))
                 lines.append(f'  - {spouse}')
 
         return lines
 
-    def _sanitize_link(self, text):
-        return re.sub(r'.*?\[\[(.*?)\]\].*', r'"[[\1]]"', text)
 
-    def _unlink(self, text):
-        return text.replace('[[', '').replace(']]', '')
+def extract_link(text):
+    if not '[[' in text:
+        return text
+
+    link = link_pattern.search(text).group(1)
+    return f'[[{sanitize_title(link)}]]'
 
 
 def serialize_people(people):
